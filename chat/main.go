@@ -25,10 +25,13 @@ func init() {
 	goth.UseProviders(
 		gplus.New(os.Getenv("GPLUS_KEY"), os.Getenv("GPLUS_SECRET"), fmt.Sprintf("http://localhost%s/auth/gplus/callback", *addr)),
 	)
+
+	// ログレベルを決定する。
+	log.SetLevel(logrus.DebugLevel)
 }
 
 func main() {
-	log.Info("main: ルーティングを開始します。")
+	log.Debug("main: ルーティングを開始します。")
 
 	router := pat.New()
 	router.Get("/auth/{provider}/callback", loginCallbackHandler)
@@ -41,7 +44,7 @@ func main() {
 	r := newRoom()
 	router.Add("GET", "/room", r)
 
-	log.Info("main: ルーティングを終了しました。")
+	log.Debug("main: ルーティングを終了しました。")
 
 	// チャットルームを開始する。
 	go r.run()

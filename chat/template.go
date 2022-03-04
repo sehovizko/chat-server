@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"sync"
 	"text/template"
+	"github.com/stretchr/objx"
 )
 
 type templateHandler struct {
@@ -19,7 +20,16 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
 
-	log.Info("templateHandler.ServeHTTP: テンプレートの処理を行います。")
+	data := map[string]interface{}{
+		"Host": r.Host,
+	}
+	if authCookie, err := r.Cookie("auth"); err == nil {
+		data["UserData"] = objx.MustFromBase64(authCookie.Value)
+	} else {
+		log.Error("templateHandler.ServeHTTP: ", err)
+	}
+
+	log.Debug("templateHandler.ServeHTTP: テンプレートの処理を行います。")
 	if err := t.templ.Execute(w, r); err != nil {
 		log.Error("templateHandler.ServeHTTP: ", err)
 	}

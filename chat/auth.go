@@ -20,7 +20,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Info("authHandler.serveHTTP: 未認証です。")
 	} else if err != nil {
 		// 別の何らかのエラーが発生
-		log.Fatal(err)
+		log.Error(err)
 		panic(err.Error())
 	} else {
 		// 認証に成功した場合、ラップされたハンドラを呼び出す。
@@ -34,14 +34,14 @@ func MustAuth(handler http.Handler) http.Handler {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info("loginHandler: ログインハンドラが呼び出されました。")
+	log.Debug("loginHandler: ログインハンドラが呼び出されました。")
 
 	// 承認ハンドラを呼び出します。
 	gothic.BeginAuthHandler(w, r)
 }
 
 func loginCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info("loginCallbackHandler: ログインコールバック開始します。" )
+	log.Debug("loginCallbackHandler: ログインコールバック開始します。" )
 
 	user, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {  // 何らかの理由でユーザー認証が完了しなかった。
@@ -62,10 +62,11 @@ func loginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header()["Location"] = []string{"/chat"}
 	w.WriteHeader(http.StatusTemporaryRedirect)
 
-	log.Info("loginCallbackHandler: ログインコールバック終了します。")
+	log.Debug("loginCallbackHandler: ログインコールバック終了します。")
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	gothic.Logout(w, r)
 	w.Header().Set("Location", "/")
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
