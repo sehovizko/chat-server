@@ -1,20 +1,21 @@
 package main
 
 import (
-	"github.com/stretchr/objx"
 	"net/http"
 	"path/filepath"
 	"sync"
 	"text/template"
+
+	"github.com/stretchr/objx"
 )
 
 type templateHandler struct {
 	once     sync.Once
 	filename string
-	templ    *template.Template // templは1つのテンプレートを表す。
+	templ    *template.Template // templ represents a single template.
 }
 
-// HTTPリクエストを処理する。
+// Serve the HTTP requests.
 func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.once.Do(func() {
 		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
@@ -29,7 +30,7 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Error("templateHandler.ServeHTTP: ", err)
 	}
 
-	log.Debug("templateHandler.ServeHTTP: テンプレートの処理を行います。")
+	log.Debug("templateHandler.ServeHTTP: Execute the template.")
 	if err := t.templ.Execute(w, data); err != nil {
 		log.Error("templateHandler.ServeHTTP: ", err)
 	}

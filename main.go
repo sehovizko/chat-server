@@ -3,35 +3,36 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/gorilla/pat"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/gplus"
 	"github.com/sirupsen/logrus"
-	"net/http"
-	"os"
 )
 
 // Global variables
 var (
 	log  = logrus.New()
-	addr = flag.String("addr", ":8080", " アプリケーションのアドレス")
+	port = flag.String("port", ":8080", "Application port address.")
 )
 
 func init() {
-	// フラグ解釈する。
+	// Parse flags.
 	flag.Parse()
 
-	// Gothのセットアップ
+	// Setup goth.
 	goth.UseProviders(
-		gplus.New(os.Getenv("GPLUS_KEY"), os.Getenv("GPLUS_SECRET"), fmt.Sprintf("http://localhost%s/auth/gplus/callback", *addr)),
+		gplus.New(os.Getenv("GPLUS_KEY"), os.Getenv("GPLUS_SECRET"), fmt.Sprintf("http://localhost%s/auth/gplus/callback", *port)),
 	)
 
-	// ログレベルを決定する。
+	// Set the logging level on a logger.
 	log.SetLevel(logrus.DebugLevel)
 }
 
 func main() {
-	log.Debug("main: ルーティングを開始します。")
+	log.Debug("main: Start routing")
 
 	router := pat.New()
 	router.Get("/auth/{provider}/callback", loginCallbackHandler)
@@ -44,12 +45,12 @@ func main() {
 	r := newRoom()
 	router.Add("GET", "/room", r)
 
-	log.Debug("main: ルーティングを終了しました。")
+	log.Debug("main: End routing")
 
-	// チャットルームを開始する。
+	// Run the chatroom.
 	go r.run()
 
-	// Webサーバーを開始する。
-	log.Info("Webサーバーを開始します。ポート: ", *addr)
-	log.Fatal(http.ListenAndServe(*addr, router))
+	// Start the web server.
+	log.Info("Start the web server - Listen port address ", *port)
+	log.Fatal(http.ListenAndServe(*port, router))
 }
