@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/objx"
 )
 
@@ -42,21 +42,21 @@ func (r *room) run() {
 		select {
 		case client := <-r.join: // 参加
 			r.clients[client] = true
-			log.Infof("room.run: 参加される方がいます。client=%s", client.u)
+			log.Infof("room.run: 参加される方がいます。client=%s", client.uuid)
 		case client := <-r.leave: // 退室
 			delete(r.clients, client)
 			close(client.send)
-			log.Infof("room.run: 退出される方がいます。 client=%s", client.u)
+			log.Infof("room.run: 退出される方がいます。 client=%s", client.uuid)
 		case msg := <-r.forward: // すべてのクライアントにメッセージを転送
 			log.Info("room.run: メッセージを受信しました。: ", msg.Message)
 			for client := range r.clients {
 				select {
 				case client.send <- msg: // メッセージを送信
-					log.Infof("room.run: --送信に成功。 client=%s", client.u)
+					log.Infof("room.run: --送信に成功。 client=%s", client.uuid)
 				default: // 送信に失敗
 					delete(r.clients, client)
 					close(client.send)
-					log.Warnf("room.run: --送信に失敗。 client=%s", client.u)
+					log.Warnf("room.run: --送信に失敗。 client=%s", client.uuid)
 				}
 			}
 		}
@@ -85,13 +85,15 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		socket:   socket,
 		send:     make(chan *message, messageBufferSize),
 		room:     r,
-		u:        uuid.Must(uuid.NewV4()),
+		uuid:     uuid.Must(uuid.NewV4()),
 		userData: objx.MustFromBase64(authCookie.Value),
 	}
 	r.join <- client
 
 	// defer文で、クライアントの終了時に退室の処理を行うように指定する。(ユーザーがいなくなった際のクリーンアップ)
-	defer func() { r.leave <- client }()
+	defer func() {
+		r.leave <- client
+	}()
 
 	// goroutineとしてwriteメソッドを実行する。
 	go client.write()

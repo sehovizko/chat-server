@@ -30,6 +30,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// MustAuth forces user to be authenticated.
 func MustAuth(handler http.Handler) http.Handler {
 	return &authHandler{next: handler}
 }
@@ -45,7 +46,7 @@ func loginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug("loginCallbackHandler: Start login handler")
 
 	user, err := gothic.CompleteUserAuth(w, r)
-	if err != nil { // // Call the authentication handler.
+	if err != nil { // Call the authentication handler.
 		log.Warning(fmt.Fprintln(w, err))
 		return
 	}
