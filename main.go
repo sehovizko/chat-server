@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/pat"
+	"github.com/gorilla/mux"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/gplus"
 	"github.com/sirupsen/logrus"
@@ -35,19 +35,20 @@ func main() {
 	log.Debug("main: Start routing")
 
 	// Routing
-	router := pat.New()
-	router.Get("/auth/{provider}/callback", loginCallbackHandler)
-	router.Get("/auth/{provider}", loginHandler)
-	router.Get("/logout", logoutHandler)
-	router.Add("GET", "/chat", MustAuth(&templateHandler{filename: "chat.html"}))
-	router.Add("GET", "/login", &templateHandler{filename: "login.html"})
-	r := newRoom()
-	router.Add("GET", "/room", r)
+	router := mux.NewRouter()
+	router.HandleFunc("/auth/{provider}/callback", loginCallbackHandler)
+	router.HandleFunc("/auth/{provider}", loginHandler)
+	router.HandleFunc("/logout", logoutHandler)
+	router.PathPrefix("/chat").Handler(MustAuth(&templateHandler{filename: "chat.html"})).Methods("GET")
+	router.PathPrefix("/login").Handler(&templateHandler{filename: "login.html"}).Methods("GET")
+	room := newRoom()
+	router.PathPrefix("/room").Handler(room).Methods("GET")
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 	log.Debug("main: End routing")
 
 	// Run the chatroom.
-	go r.run()
+	go room.run()
 
 	// Start the web server.
 	log.Info("Start the web server - Listen port address ", *port)

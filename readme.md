@@ -1,3 +1,5 @@
-# Chat Application written in Golang
+# Chat Server written in Golang
 
-[![status](https://img.shields.io/badge/status-unstable-green.svg)](https://img.shields.io/badge/status-unstable-green.svg)
+Chat server written in Golang.
+
+[![Build Status](https://travis-ci.org/mnrn/chat-server.svg?branch=master)](https://travis-ci.org/mnrn/chat-server)
